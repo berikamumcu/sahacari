@@ -1,6 +1,7 @@
 const express = require('express');
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
+const path = require('path');
 const pool = require('../db/pool');
 const { requireAuth } = require('../middlewareAuth');
 
@@ -42,18 +43,16 @@ function todayTR() {
 }
 
 /*
- * Uzun şirket adının PDF başlığını bozmasını önlemek
- * için ekranda kullanılacak şirket adı.
+ * Yavuz Su Mekanik'in resmi şirket adı uzun olsa bile
+ * PDF başlığında marka adı gösterilir.
+ *
+ * Diğer firmalarda kayıtlı şirket adı olduğu gibi kullanılır.
  */
 function getDisplayCompanyName(companyName) {
   const name = String(companyName || '').trim();
 
   if (!name) return '';
 
-  /*
-   * Yavuz Su Mekanik'in resmi şirket adı uzun olsa bile
-   * PDF başlığında marka adı gösterilir.
-   */
   if (
     name
       .toLocaleUpperCase('tr-TR')
@@ -62,16 +61,9 @@ function getDisplayCompanyName(companyName) {
     return 'YAVUZ SU MEKANİK';
   }
 
-  /*
-   * Diğer firmalarda isim olduğu gibi kullanılır.
-   */
   return name;
 }
 
-/*
- * Firma adresinin PDF'de daha temiz görünmesi
- * için satırda kullanılacak metin.
- */
 function cleanAddress(address) {
   if (!address) return '';
 
@@ -81,28 +73,49 @@ function cleanAddress(address) {
 }
 
 /* ==================================================
-   FONT
+   FONTLAR
 ================================================== */
 
-function findFont(candidates) {
-  for (const file of candidates) {
-    if (fs.existsSync(file)) {
-      return file;
-    }
-  }
+/*
+ * Fontlar artık projenin içinde.
+ *
+ * Proje:
+ *
+ * Yavuz_Su_Mekanik_GUNCEL_SISTEM_FINAL_v2/
+ * └── fonts/
+ *     ├── DejaVuSans.ttf
+ *     └── DejaVuSans-Bold.ttf
+ */
 
-  return null;
+const regularFont = path.join(
+  __dirname,
+  '../../fonts/DejaVuSans.ttf'
+);
+
+const boldFont = path.join(
+  __dirname,
+  '../../fonts/DejaVuSans-Bold.ttf'
+);
+
+
+/*
+ * Fontlar yoksa uygulamayı sessizce
+ * bozuk PDF üretmek yerine hata ver.
+ */
+if (!fs.existsSync(regularFont)) {
+  console.error(
+    'DejaVuSans.ttf bulunamadı:',
+    regularFont
+  );
 }
 
-const regularFont = findFont([
-  '/System/Library/Fonts/Supplemental/Arial.ttf',
-  '/Library/Fonts/Arial.ttf'
-]);
+if (!fs.existsSync(boldFont)) {
+  console.error(
+    'DejaVuSans-Bold.ttf bulunamadı:',
+    boldFont
+  );
+}
 
-const boldFont = findFont([
-  '/System/Library/Fonts/Supplemental/Arial Bold.ttf',
-  '/Library/Fonts/Arial Bold.ttf'
-]);
 
 /* ==================================================
    PDF
@@ -111,6 +124,7 @@ const boldFont = findFont([
 router.get(
   '/cari/:customerId',
   async (req, res, next) => {
+
     try {
 
       /* ==================================================
@@ -150,53 +164,60 @@ router.get(
         ]
       );
 
+
       if (!cust.rows[0]) {
+
         return res.status(404).json({
           error: 'Müşteri bulunamadı.'
         });
+
       }
 
+
       const meta = cust.rows[0];
+
 
       /* ==================================================
          CARİ HAREKETLER
       ================================================== */
 
-      const { rows } = await pool.query(
-        `
-        SELECT
-          id,
+      const { rows } =
+        await pool.query(
+          `
+          SELECT
+            id,
 
-          TO_CHAR(
+            TO_CHAR(
+              transaction_date,
+              'YYYY-MM-DD'
+            ) AS transaction_date,
+
+            TO_CHAR(
+              due_date,
+              'YYYY-MM-DD'
+            ) AS due_date,
+
+            movement_type,
+            description,
+            document_no,
+            amount
+
+          FROM current_account_transactions
+
+          WHERE
+            customer_id = $1
+            AND company_id = $2
+
+          ORDER BY
             transaction_date,
-            'YYYY-MM-DD'
-          ) AS transaction_date,
+            id
+          `,
+          [
+            req.params.customerId,
+            req.auth.company_id
+          ]
+        );
 
-          TO_CHAR(
-            due_date,
-            'YYYY-MM-DD'
-          ) AS due_date,
-
-          movement_type,
-          description,
-          document_no,
-          amount
-
-        FROM current_account_transactions
-
-        WHERE
-          customer_id = $1
-          AND company_id = $2
-
-        ORDER BY
-          transaction_date,
-          id
-        `,
-        [
-          req.params.customerId,
-          req.auth.company_id
-        ]
-      );
 
       /* ==================================================
          BAKİYE + TOPLAMLAR
@@ -208,88 +229,110 @@ router.get(
       let totalDebit = 0;
       let totalCredit = 0;
 
+
       const tx = rows.map(r => {
 
         const amount =
           Number(r.amount || 0);
 
+
         /*
-         * SATIŞ + DEVİR = BORÇ
+         * SATIŞ + DEVİR
+         * BORÇ
          */
 
         if (
           r.movement_type === 'SATIS' ||
           r.movement_type === 'DEVIR'
         ) {
+
           bal += amount;
           totalDebit += amount;
+
         }
 
+
         /*
-         * TAHSİLAT = ÖDEME
+         * TAHSİLAT
+         * ÖDEME
          */
 
         else if (
           r.movement_type === 'TAHSILAT'
         ) {
+
           bal -= amount;
           totalPayment += amount;
+
         }
 
+
         /*
-         * İADE = ALACAK
+         * İADE
+         * ALACAK
          */
 
         else if (
           r.movement_type === 'IADE'
         ) {
+
           bal -= amount;
           totalCredit += amount;
+
         }
+
 
         return {
           ...r,
           amount,
           balance: bal
         };
+
       });
+
 
       /* ==================================================
-         PDF OLUŞTUR
+         PDF
       ================================================== */
 
-      const doc = new PDFDocument({
-        size: 'A4',
-        margin: 36,
-        autoFirstPage: true
-      });
+      const doc =
+        new PDFDocument({
+          size: 'A4',
+          margin: 36,
+          autoFirstPage: true
+        });
+
 
       res.setHeader(
         'Content-Type',
         'application/pdf'
       );
 
+
       const safeName =
-        `cari-${meta.own_company_id || req.auth.company_id}.pdf`;
+        `cari-${meta.own_company_id || req.auth.company_id}-${meta.company_name || 'musteri'}`
+          .replace(
+            /[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ_-]+/g,
+            '-'
+          )
+          .toLowerCase();
+
 
       res.setHeader(
         'Content-Disposition',
-        `attachment; filename="${safeName}"`
+        `attachment; filename="${safeName}.pdf"`
       );
+
 
       doc.pipe(res);
 
-      const fontRegular =
-        regularFont || 'Helvetica';
-
-      const fontBold =
-        boldFont || 'Helvetica-Bold';
 
       const pageWidth =
         doc.page.width;
 
       const pageHeight =
         doc.page.height;
+
 
       const left = 36;
 
@@ -299,11 +342,13 @@ router.get(
       const contentWidth =
         right - left;
 
+
       /* ==================================================
          ÜST BÖLÜM
       ================================================== */
 
       let companyX = left;
+
 
       /* ==================================================
          LOGO
@@ -311,20 +356,23 @@ router.get(
 
       if (
         meta.logo_url &&
-        /^data:image\/[^;]+;base64,/.test(
+        /^data:image\/[^;]+;base64,/i.test(
           meta.logo_url
         )
       ) {
+
         try {
 
           const base64 =
             meta.logo_url.split(',')[1];
+
 
           const buffer =
             Buffer.from(
               base64,
               'base64'
             );
+
 
           doc.image(
             buffer,
@@ -335,6 +383,7 @@ router.get(
             }
           );
 
+
           companyX =
             left + 42;
 
@@ -344,11 +393,14 @@ router.get(
             'Logo PDF içine eklenemedi:',
             err.message
           );
+
         }
+
       }
 
+
       /* ==================================================
-         FİRMA ADI
+         ŞİRKET ADI
       ================================================== */
 
       const displayCompanyName =
@@ -356,8 +408,9 @@ router.get(
           meta.own_company
         );
 
+
       doc
-        .font(fontBold)
+        .font(boldFont)
         .fontSize(12)
         .fillColor('#c62828')
         .text(
@@ -365,11 +418,13 @@ router.get(
           companyX,
           42,
           {
-            width: 210,
+            width: 220,
             height: 16,
-            lineBreak: false
+            lineBreak: false,
+            ellipsis: true
           }
         );
+
 
       /* ==================================================
          E-POSTA
@@ -378,7 +433,7 @@ router.get(
       if (meta.own_email) {
 
         doc
-          .font(fontRegular)
+          .font(regularFont)
           .fontSize(7)
           .fillColor('#555')
           .text(
@@ -386,15 +441,18 @@ router.get(
             companyX,
             59,
             {
-              width: 220,
+              width: 230,
               height: 10,
-              lineBreak: false
+              lineBreak: false,
+              ellipsis: true
             }
           );
+
       }
 
+
       /* ==================================================
-         KONUM / ADRES
+         ADRES
       ================================================== */
 
       const address =
@@ -402,10 +460,11 @@ router.get(
           meta.own_address
         );
 
+
       if (address) {
 
         doc
-          .font(fontRegular)
+          .font(regularFont)
           .fontSize(7)
           .fillColor('#555')
           .text(
@@ -419,14 +478,16 @@ router.get(
               ellipsis: true
             }
           );
+
       }
+
 
       /* ==================================================
          MÜŞTERİ ADI
       ================================================== */
 
       doc
-        .font(fontBold)
+        .font(boldFont)
         .fontSize(10)
         .fillColor('#111')
         .text(
@@ -442,13 +503,14 @@ router.get(
           }
         );
 
+
       /* ==================================================
          RAPOR TARİHİ
       ================================================== */
 
       doc
-        .font(fontRegular)
-        .fontSize(9)
+        .font(regularFont)
+        .fontSize(8.5)
         .fillColor('#222')
         .text(
           `Rapor Tarihi: ${todayTR()}`,
@@ -462,40 +524,54 @@ router.get(
           }
         );
 
+
       /* ==================================================
          ÜST ÇİZGİ
       ================================================== */
 
       doc
-        .moveTo(left, 99)
-        .lineTo(right, 99)
+        .moveTo(
+          left,
+          99
+        )
+        .lineTo(
+          right,
+          99
+        )
         .strokeColor('#1e527d')
         .lineWidth(1)
         .stroke();
+
 
       /* ==================================================
          TABLO KOLONLARI
       ================================================== */
 
       const widths = [
-        44, // Tarih
-        44, // Vade
-        58, // Hareket
-        95, // Açıklama
-        72, // Belge
-        52, // Ödeme
-        52, // Borç
-        52, // Alacak
-        54  // Bakiye
+        42,  // Tarih
+        42,  // Vade
+        55,  // Hareket
+        104, // Açıklama
+        76,  // Belge / Fatura No
+        52,  // Ödeme
+        52,  // Borç
+        52,  // Alacak
+        53   // Bakiye
       ];
+
 
       const cols = [left];
 
+
       for (const width of widths) {
+
         cols.push(
-          cols[cols.length - 1] + width
+          cols[cols.length - 1] +
+          width
         );
+
       }
+
 
       const heads = [
         'Tarih',
@@ -509,7 +585,9 @@ router.get(
         'Bakiye'
       ];
 
+
       let y = 111;
+
 
       /* ==================================================
          TABLO BAŞLIĞI
@@ -517,9 +595,12 @@ router.get(
 
       function drawTableHeader() {
 
-        const headerHeight = 26;
+        const headerHeight = 28;
 
-        /* Mavi alan */
+
+        /*
+         * Mavi zemin
+         */
 
         doc
           .rect(
@@ -530,31 +611,45 @@ router.get(
           )
           .fill('#1e527d');
 
-        /* Hücre çizgileri */
+
+        /*
+         * Hücre çizgileri
+         */
 
         doc
           .strokeColor('#dbe7f2')
           .lineWidth(0.5);
 
-        for (const x of cols) {
+
+        for (
+          const x of cols
+        ) {
 
           doc
-            .moveTo(x, y)
+            .moveTo(
+              x,
+              y
+            )
             .lineTo(
               x,
               y + headerHeight
             )
             .stroke();
+
         }
 
-        /* Üst çizgi */
 
         doc
-          .moveTo(left, y)
-          .lineTo(right, y)
+          .moveTo(
+            left,
+            y
+          )
+          .lineTo(
+            right,
+            y
+          )
           .stroke();
 
-        /* Alt çizgi */
 
         doc
           .moveTo(
@@ -567,12 +662,16 @@ router.get(
           )
           .stroke();
 
-        /* Başlıklar */
+
+        /*
+         * Başlıklar
+         */
 
         doc
-          .fillColor('#fff')
-          .font(fontBold)
-          .fontSize(6.7);
+          .font(boldFont)
+          .fontSize(6.4)
+          .fillColor('#fff');
+
 
         heads.forEach(
           (head, i) => {
@@ -581,31 +680,36 @@ router.get(
               cols[i + 1] -
               cols[i];
 
+
             doc.text(
               head,
               cols[i] + 3,
-              y + 8,
+              y + 9,
               {
                 width:
                   cellWidth - 6,
+
                 align:
                   i >= 5
                     ? 'right'
                     : 'left',
-                lineBreak: false
+
+                lineBreak: false,
+                ellipsis: true
               }
             );
+
           }
         );
 
+
         y += headerHeight;
 
-        doc
-          .fillColor('#182334')
-          .font(fontRegular);
       }
 
+
       drawTableHeader();
+
 
       /* ==================================================
          HAREKETLER
@@ -625,11 +729,11 @@ router.get(
 
 
           /*
-           * Sütun mantığı:
+           * DOĞRU MUHASEBE MANTIĞI
            *
-           * Tahsilat -> sadece Ödeme
-           * Satış/Devir -> sadece Borç
-           * İade -> sadece Alacak
+           * TAHSİLAT -> ÖDEME
+           * SATIŞ/DEVİR -> BORÇ
+           * İADE -> ALACAK
            */
 
           const vals = [
@@ -648,19 +752,13 @@ router.get(
 
             r.document_no || '',
 
-            /*
-             * ÖDEME
-             * Sadece TAHSİLAT
-             */
+            /* ÖDEME */
 
             r.movement_type === 'TAHSILAT'
               ? money(r.amount)
               : '',
 
-            /*
-             * BORÇ
-             * SATIŞ + DEVİR
-             */
+            /* BORÇ */
 
             (
               r.movement_type === 'SATIS' ||
@@ -669,26 +767,29 @@ router.get(
               ? money(r.amount)
               : '',
 
-            /*
-             * ALACAK
-             * Sadece İADE
-             */
+            /* ALACAK */
 
             r.movement_type === 'IADE'
               ? money(r.amount)
               : '',
 
-            /*
-             * BAKİYE
-             */
+            /* BAKİYE */
 
             money(r.balance)
+
           ];
+
 
           const rowHeight = 30;
 
+
           const bottomLimit =
             pageHeight - 70;
+
+
+          /*
+           * Sayfaya sığmazsa yeni sayfa
+           */
 
           if (
             y + rowHeight >
@@ -700,9 +801,13 @@ router.get(
             y = 45;
 
             drawTableHeader();
+
           }
 
-          /* Zebra */
+
+          /*
+           * Zebra
+           */
 
           if (idx % 2 === 0) {
 
@@ -714,29 +819,48 @@ router.get(
                 rowHeight
               )
               .fill('#f5f8fc');
+
           }
 
-          /* Hücre çizgileri */
+
+          /*
+           * Hücre çizgileri
+           */
 
           doc
             .strokeColor('#cfd8e3')
             .lineWidth(0.5);
 
-          for (const x of cols) {
+
+          for (
+            const x of cols
+          ) {
 
             doc
-              .moveTo(x, y)
+              .moveTo(
+                x,
+                y
+              )
               .lineTo(
                 x,
                 y + rowHeight
               )
               .stroke();
+
           }
 
+
           doc
-            .moveTo(left, y)
-            .lineTo(right, y)
+            .moveTo(
+              left,
+              y
+            )
+            .lineTo(
+              right,
+              y
+            )
             .stroke();
+
 
           doc
             .moveTo(
@@ -749,7 +873,10 @@ router.get(
             )
             .stroke();
 
-          /* Metinler */
+
+          /*
+           * Metinler
+           */
 
           vals.forEach(
             (value, i) => {
@@ -758,39 +885,49 @@ router.get(
                 cols[i + 1] -
                 cols[i];
 
+
               doc
-                .font(fontRegular)
-                .fontSize(6.5)
+                .font(regularFont)
+                .fontSize(6.35)
                 .fillColor('#182334')
                 .text(
                   value,
                   cols[i] + 3,
-                  y + 8,
+                  y + 9,
                   {
                     width:
                       cellWidth - 6,
+
                     height:
-                      rowHeight - 8,
+                      rowHeight - 9,
+
                     align:
                       i >= 5
                         ? 'right'
                         : 'left',
+
                     ellipsis: true,
+
                     lineBreak: false
                   }
                 );
+
             }
           );
 
+
           y += rowHeight;
+
         }
       );
+
 
       /* ==================================================
          TOPLAM
       ================================================== */
 
-      const totalHeight = 28;
+      const totalHeight = 29;
+
 
       if (
         y + totalHeight >
@@ -802,9 +939,13 @@ router.get(
         y = 45;
 
         drawTableHeader();
+
       }
 
-      /* Arka plan */
+
+      /*
+       * Toplam arka plan
+       */
 
       doc
         .rect(
@@ -815,27 +956,45 @@ router.get(
         )
         .fill('#eaf2fb');
 
-      /* Hücre çizgileri */
+
+      /*
+       * Hücre çizgileri
+       */
 
       doc
         .strokeColor('#cfd8e3')
         .lineWidth(0.5);
 
-      for (const x of cols) {
+
+      for (
+        const x of cols
+      ) {
 
         doc
-          .moveTo(x, y)
+          .moveTo(
+            x,
+            y
+          )
           .lineTo(
             x,
             y + totalHeight
           )
           .stroke();
+
       }
 
+
       doc
-        .moveTo(left, y)
-        .lineTo(right, y)
+        .moveTo(
+          left,
+          y
+        )
+        .lineTo(
+          right,
+          y
+        )
         .stroke();
+
 
       doc
         .moveTo(
@@ -848,103 +1007,117 @@ router.get(
         )
         .stroke();
 
+
       /* ==================================================
          TOPLAM YAZISI
       ================================================== */
 
       doc
-        .fillColor('#182334')
-        .font(fontBold)
-        .fontSize(7.5);
+        .font(boldFont)
+        .fontSize(7.2)
+        .fillColor('#182334');
+
 
       doc.text(
         'TOPLAM',
         cols[3] + 3,
-        y + 9,
+        y + 10,
         {
           width:
             cols[5] -
             cols[3] -
             6,
+
           align: 'right',
+
           lineBreak: false
         }
       );
 
+
       /* ==================================================
          TOPLAM ÖDEME
-         SADECE TAHSİLAT
       ================================================== */
 
       doc.text(
         money(totalPayment),
         cols[5] + 3,
-        y + 9,
+        y + 10,
         {
           width:
             cols[6] -
             cols[5] -
             6,
+
           align: 'right',
+
           lineBreak: false
         }
       );
 
+
       /* ==================================================
          TOPLAM BORÇ
-         SATIŞ + DEVİR
       ================================================== */
 
       doc.text(
         money(totalDebit),
         cols[6] + 3,
-        y + 9,
+        y + 10,
         {
           width:
             cols[7] -
             cols[6] -
             6,
+
           align: 'right',
+
           lineBreak: false
         }
       );
 
+
       /* ==================================================
          TOPLAM ALACAK
-         SADECE İADE
       ================================================== */
 
       doc.text(
         money(totalCredit),
         cols[7] + 3,
-        y + 9,
+        y + 10,
         {
           width:
             cols[8] -
             cols[7] -
             6,
+
           align: 'right',
+
           lineBreak: false
         }
       );
 
+
       /* ==================================================
-         SON BAKİYE
+         TOPLAM BAKİYE
       ================================================== */
 
       doc.text(
         money(bal),
         cols[8] + 3,
-        y + 9,
+        y + 10,
         {
           width:
             cols[9] -
             cols[8] -
             6,
+
           align: 'right',
+
           lineBreak: false
         }
       );
+
 
       /* ==================================================
          PDF BİTİR
@@ -953,9 +1126,13 @@ router.get(
       doc.end();
 
     } catch (e) {
+
       next(e);
+
     }
+
   }
 );
+
 
 module.exports = router;
