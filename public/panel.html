@@ -1,0 +1,3413 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yavuz Su Mekanik Panel</title>
+
+<style>
+:root{
+  --nav:#102a43;
+  --blue:#1675e8;
+  --bg:#f5f8fc;
+  --line:#e2e8f0;
+  --text:#182334;
+  --muted:#728096;
+  --green:#16a36a;
+  --red:#df4654
+}
+
+*{
+  box-sizing:border-box
+}
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text)
+}
+
+.app{
+  display:flex;
+  min-height:100vh
+}
+
+.side{
+  width:235px;
+  background:var(--nav);
+  color:#fff;
+  padding:20px 14px;
+  position:fixed;
+  height:100vh
+}
+
+.brand{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin-bottom:25px
+}
+
+/* Şirket logosu */
+.brand-logo{
+  width:52px;
+  height:52px;
+  background:#fff;
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  flex-shrink:0
+}
+
+.brand-logo img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:none
+}
+
+.brand-logo.empty::before{
+  content:"🔥";
+  font-size:26px
+}
+
+.brand b{
+  font-size:14px
+}
+
+.brand small{
+  display:block;
+  color:#a9bed4
+}
+
+.nav button{
+  width:100%;
+  border:0;
+  background:none;
+  color:#c8d6e5;
+  text-align:left;
+  padding:11px 13px;
+  border-radius:8px;
+  margin:3px 0;
+  cursor:pointer
+}
+
+.nav button.active,
+.nav button:hover{
+  background:var(--blue);
+  color:#fff
+}
+
+.main{
+  margin-left:235px;
+  width:calc(100% - 235px);
+  padding:24px
+}
+
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:18px
+}
+
+.top h1{
+  margin:0 0 5px;
+  font-size:24px
+}
+
+.top p{
+  margin:0;
+  color:var(--muted);
+  font-size:13px
+}
+
+.date{
+  background:#fff;
+  padding:9px 12px;
+  border:1px solid var(--line);
+  border-radius:8px
+}
+
+.page{
+  display:none
+}
+
+.page.active{
+  display:block
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:13px
+}
+
+.stat,
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:12px;
+  box-shadow:0 6px 18px #183a5b0f
+}
+
+.stat{
+  padding:16px
+}
+
+.stat small{
+  color:var(--muted)
+}
+
+.stat strong{
+  display:block;
+  font-size:22px;
+  margin-top:7px
+}
+
+.section{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin:20px 0 10px
+}
+
+.section h2{
+  margin:0;
+  font-size:17px
+}
+
+.btn{
+  border:0;
+  background:var(--blue);
+  color:#fff;
+  padding:10px 14px;
+  border-radius:8px;
+  font-weight:700;
+  cursor:pointer
+}
+
+.btn.green{
+  background:var(--green)
+}
+
+.btn.red{
+  background:var(--red)
+}
+
+.btn.light{
+  background:#eaf2fb;
+  color:#27517d
+}
+
+.card{
+  padding:17px
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:12px
+}
+
+th{
+  background:#1e527d;
+  color:#fff;
+  padding:10px;
+  text-align:left
+}
+
+td{
+  padding:9px;
+  border-bottom:1px solid var(--line)
+}
+
+.layout{
+  display:grid;
+  grid-template-columns:1.45fr .85fr;
+  gap:14px
+}
+
+.form{
+  display:grid;
+  gap:11px
+}
+
+.row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:11px
+}
+
+.field label{
+  font-size:12px;
+  font-weight:700;
+  display:block;
+  margin-bottom:5px
+}
+
+.field input,
+.field select,
+.field textarea{
+  width:100%;
+  padding:10px;
+  border:1px solid #d6dee9;
+  border-radius:8px;
+  font:inherit
+}
+
+.field textarea{
+  min-height:82px
+}
+
+.customer{
+  display:flex;
+  justify-content:space-between;
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  margin-bottom:9px
+}
+
+.customer small{
+  display:block;
+  color:var(--muted);
+  margin-top:3px
+}
+
+.msg{
+  font-size:12px
+}
+
+.success{
+  color:var(--green)
+}
+
+.error{
+  color:var(--red)
+}
+
+.reportHead{
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+  align-items:center;
+  margin-bottom:14px
+}
+
+.reportHead .cust{
+  font-weight:800;
+  font-size:17px
+}
+
+.reportHead .firm{
+  text-align:right;
+  font-weight:800
+}
+
+.material{
+  display:grid;
+  grid-template-columns:1.5fr .6fr .6fr .8fr auto;
+  gap:6px;
+  margin-top:7px
+}
+
+.material input{
+  width:100%;
+  padding:8px;
+  border:1px solid #d6dee9;
+  border-radius:7px
+}
+
+.material button{
+  border:0;
+  background:#fdebed;
+  color:#b52d3e;
+  border-radius:7px
+}
+
+.muted{
+  color:var(--muted)
+}
+
+.pdf-company{
+  display:flex;
+  align-items:center;
+  gap:10px
+}
+
+.pdf-company img{
+  width:48px;
+  height:48px;
+  object-fit:contain
+}
+
+.job-actions{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap
+}
+
+.job-actions .btn{
+  padding:7px 10px;
+  font-size:12px
+}
+
+@media(max-width:1000px){
+  .side{
+    width:200px
+  }
+
+  .main{
+    margin-left:200px;
+    width:calc(100% - 200px)
+  }
+
+  .stats{
+    grid-template-columns:1fr 1fr
+  }
+
+  .layout{
+    grid-template-columns:1fr
+  }
+}
+
+@media(max-width:700px){
+  .side{
+    display:none
+  }
+
+  .main{
+    margin-left:0;
+    width:100%
+  }
+
+  .row{
+    grid-template-columns:1fr
+  }
+
+  .top{
+    align-items:flex-start;
+    gap:10px
+  }
+
+  .date{
+    display:none
+  }
+}
+
+@media print{
+  .side,
+  .top,
+  #pdf>.section{
+    display:none!important
+  }
+
+  .main{
+    margin:0;
+    width:100%;
+    padding:0
+  }
+
+  .page{
+    display:none
+  }
+
+  .page.active{
+    display:block
+  }
+
+  .card{
+    box-shadow:none;
+    border:0
+  }
+
+  .pdfprint{
+  }
+
+  body{
+    background:#fff
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <aside class="side">
+
+    <!-- ŞİRKET MARKASI -->
+    <div class="brand">
+
+      <div class="brand-logo empty" id="companyLogoBox">
+        <img id="companyLogoImg" src="" alt="Şirket Logosu">
+      </div>
+
+      <div>
+        <b id="companyName">YAVUZ SU MEKANİK</b>
+        <small>Cari Hesap Sistemi</small>
+      </div>
+
+    </div>
+
+    <div class="nav">
+
+      <button class="active" data-p="dashboard">
+        🏠 Ana Sayfa
+      </button>
+
+      <button data-p="customers">
+        👥 Müşteriler
+      </button>
+
+      <button data-p="transaction">
+        ⊕ İşlem Ekle
+      </button>
+
+      <button data-p="report">
+        ▤ Cari Hesap Raporu
+      </button>
+
+      <button data-p="jobs">
+        🛠 Günlük İşler
+      </button>
+
+      <button data-p="pdf">
+        ▣ PDF Oluştur
+      </button>
+
+      <button data-p="settings">
+        ⚙ Firma Ayarları
+      </button>
+
+      <button onclick="logout()">
+        ↪ Çıkış
+      </button>
+
+    </div>
+
+  </aside>
+
+
+  <main class="main">
+
+    <div class="top">
+
+      <div>
+        <h1 id="title">Hoş Geldiniz</h1>
+        <p>
+          Şirketinizin cari hesaplarını ve saha işlerini yönetin.
+        </p>
+      </div>
+
+      <div class="date" id="today"></div>
+
+    </div>
+
+
+    <!-- ANA SAYFA -->
+
+    <section id="dashboard" class="page active">
+
+      <div class="stats">
+
+        <div class="stat">
+          <small>Toplam Müşteri</small>
+          <strong id="sc">0</strong>
+        </div>
+
+        <div class="stat">
+          <small>Toplam Tahsilat</small>
+          <strong
+            style="color:var(--green)"
+            id="stc">
+            0,00 TL
+          </strong>
+        </div>
+
+        <div class="stat">
+          <small>Toplam Borç</small>
+          <strong
+            style="color:var(--red)"
+            id="sdebt">
+            0,00 TL
+          </strong>
+        </div>
+
+        <div class="stat">
+          <small>Genel Bakiye</small>
+          <strong
+            style="color:var(--blue)"
+            id="sbal">
+            0,00 TL
+          </strong>
+        </div>
+
+      </div>
+
+
+      <div class="section">
+
+        <h2>Son Cari İşlemler</h2>
+
+        <button
+          class="btn light"
+          data-p="transaction">
+          + Yeni İşlem
+        </button>
+
+      </div>
+
+
+      <div class="card">
+
+        <div class="muted">
+          Veriler veritabanından yükleniyor.
+        </div>
+
+        <div id="recent"></div>
+
+      </div>
+
+    </section>
+
+
+    <!-- MÜŞTERİLER -->
+
+    <section id="customers" class="page">
+
+      <div class="section">
+
+        <h2>Müşteriler</h2>
+
+        <button
+          class="btn"
+          onclick="addCustomer()">
+          + Müşteri Ekle
+        </button>
+
+      </div>
+
+      <div
+        class="card"
+        id="customersBox">
+      </div>
+
+    </section>
+
+
+    <!-- İŞLEM EKLE -->
+
+    <section id="transaction" class="page">
+
+      <div class="section">
+        <h2>Yeni Cari İşlem</h2>
+      </div>
+
+      <div class="layout">
+
+        <div class="card">
+
+          <div class="form">
+
+            <div class="field">
+
+              <label>Müşteri</label>
+
+              <select id="txCust"></select>
+
+            </div>
+
+
+            <div class="row">
+
+              <div class="field">
+
+                <label>Tarih</label>
+
+                <input
+                  id="txDate"
+                  type="date">
+
+              </div>
+
+
+              <div class="field">
+
+                <label>Vade</label>
+
+                <input
+                  id="txDue"
+                  type="date">
+
+              </div>
+
+            </div>
+
+
+            <div class="field">
+
+              <label>Hareket</label>
+
+              <select id="txType">
+
+                <option value="SATIS">
+                  Satış
+                </option>
+
+                <option value="TAHSILAT">
+                  Tahsilat
+                </option>
+
+                <option value="DEVIR">
+                  Devir
+                </option>
+
+                <option value="IADE">
+                  İade
+                </option>
+
+              </select>
+
+            </div>
+
+
+            <div class="field">
+
+              <label>Açıklama</label>
+
+              <textarea id="txDesc"></textarea>
+
+            </div>
+
+
+            <div class="field">
+
+              <label>
+                Belge / Fatura No
+              </label>
+
+              <input id="txInv">
+
+            </div>
+
+
+            <div class="field">
+
+              <label>Tutar</label>
+
+              <input
+                id="txAmount"
+                type="number"
+                step="0.01">
+
+            </div>
+
+
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+
+  <button
+    class="btn"
+    onclick="saveTx()">
+    Kaydet
+  </button>
+
+  <button
+    class="btn light"
+    type="button"
+    onclick="cancelTransactionEdit()">
+    Temizle
+  </button>
+
+</div>
+
+            <div
+              id="txMsg"
+              class="msg">
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="card">
+
+          <h3>Otomatik hesaplama</h3>
+
+          <p class="muted">
+            Satış ve devir borcu artırır;
+            tahsilat ve iade bakiyeyi azaltır.
+            Cari rapor müşteri seçimine göre
+            otomatik oluşturulur.
+          </p>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- RAPOR -->
+
+    <section id="report" class="page">
+
+      <div class="section">
+
+        <h2>Cari Hesap Raporu</h2>
+
+        <div>
+
+          <button
+            class="btn red"
+            onclick="go('pdf')">
+            PDF Önizleme
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div class="card">
+
+        <div
+          class="row"
+          style="margin-bottom:14px">
+
+          <div class="field">
+
+            <label>Müşteri</label>
+
+            <select
+              id="repCust"
+              onchange="renderReport()">
+            </select>
+
+          </div>
+
+
+          <div class="field">
+
+            <label>Rapor Tarihi</label>
+
+            <input
+              id="rdate"
+              readonly>
+
+          </div>
+
+        </div>
+
+
+        <div id="report"></div>
+
+      </div>
+
+    </section>
+
+
+    <!-- GÜNLÜK İŞLER -->
+
+    <section id="jobs" class="page">
+
+      <div class="section">
+
+        <h2>Günlük Saha İşleri</h2>
+
+        <button
+          class="btn"
+          onclick="resetJob()">
+          + Yeni İş
+        </button>
+
+      </div>
+
+
+      <div class="layout">
+
+        <div class="card">
+
+          <div class="form">
+
+            <div class="row">
+
+              <div class="field">
+
+                <label>Tarih</label>
+
+                <input
+                  id="jobDate"
+                  type="date">
+
+              </div>
+
+
+              <div class="field">
+
+                <label>Müşteri</label>
+
+                <select id="jobCust"></select>
+
+              </div>
+
+            </div>
+
+
+            <div class="field">
+
+              <label>Gidilen Yer</label>
+
+              <input
+                id="jobLocation"
+                placeholder="Örn. Yunusemre / Manisa">
+
+            </div>
+
+
+            <div class="field">
+
+              <label>Yapılan İş</label>
+
+              <textarea id="jobDesc"></textarea>
+
+            </div>
+
+
+            <div class="row">
+
+              <div class="field">
+
+                <label>İşçilik Ücreti</label>
+
+                <input
+                  id="jobLabor"
+                  type="number"
+                  step="0.01">
+
+              </div>
+
+
+              <div class="field">
+
+                <label>Toplam Ücret</label>
+
+                <input
+                  id="jobTotal"
+                  type="number"
+                  step="0.01">
+
+              </div>
+
+            </div>
+
+
+            <div>
+
+              <label
+                style="font-size:12px;font-weight:700">
+                Kullanılan Malzemeler
+              </label>
+
+              <div id="materials"></div>
+
+              <button
+                class="btn light"
+                type="button"
+                style="margin-top:7px"
+                onclick="addMaterial()">
+                + Malzeme
+              </button>
+
+            </div>
+
+
+            <button
+              class="btn green"
+              onclick="saveJob()">
+              Saha İşini Kaydet
+            </button>
+
+            <div
+              id="jobMsg"
+              class="msg">
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="card">
+
+          <div class="row">
+
+            <div class="field">
+
+              <label>Başlangıç</label>
+
+              <input
+                id="from"
+                type="date"
+                onchange="loadJobs()">
+
+            </div>
+
+
+            <div class="field">
+
+              <label>Bitiş</label>
+
+              <input
+                id="to"
+                type="date"
+                onchange="loadJobs()">
+
+            </div>
+
+          </div>
+
+
+          <div id="jobsBox"></div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- PDF -->
+
+    <section id="pdf" class="page">
+
+      <div class="section">
+
+        <h2>PDF Oluştur Önizleme</h2>
+
+        <button
+          class="btn"
+          onclick="downloadPDF()">
+          PDF İndir
+        </button>
+
+      </div>
+
+
+      <div
+        class="card"
+        id="pdfBox">
+      </div>
+
+    </section>
+
+
+    <!-- FİRMA AYARLARI -->
+
+    <section id="settings" class="page">
+
+      <div class="section">
+
+        <h2>Firma Ayarları</h2>
+
+      </div>
+
+
+      <div class="card">
+
+        <div
+          class="form"
+          style="max-width:700px">
+
+          <div class="field">
+
+            <label>Firma Adı</label>
+
+            <input id="setName">
+
+          </div>
+
+
+          <div class="row">
+
+            <div class="field">
+
+              <label>Vergi No</label>
+
+              <input id="setTax">
+
+            </div>
+
+
+            <div class="field">
+
+              <label>Telefon</label>
+
+              <input id="setPhone">
+
+            </div>
+
+          </div>
+
+
+          <div class="field">
+
+            <label>E-posta</label>
+
+            <input
+              id="setEmail"
+              type="email">
+
+          </div>
+
+
+          <div class="field">
+
+            <label>Adres</label>
+
+            <textarea id="setAddress"></textarea>
+
+          </div>
+
+
+          <div class="field">
+
+            <label>Firma Logosu</label>
+
+            <input
+              id="setLogo"
+              type="file"
+              accept="image/png,image/jpeg,image/webp">
+
+          </div>
+
+
+          <button
+            class="btn"
+            onclick="saveSettings()">
+            Kaydet
+          </button>
+
+
+          <div
+            id="setMsg"
+            class="msg">
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+
+<script>
+
+
+function cancelTransactionEdit(){
+
+  editingTransactionId = null;
+
+
+  txDate.value =
+    new Date()
+      .toISOString()
+      .slice(0,10);
+
+
+  txDue.value =
+    txDate.value;
+
+
+  txDesc.value='';
+  txInv.value='';
+  txAmount.value='';
+
+
+  txMsg.textContent='';
+
+
+  const saveButton =
+    document.querySelector(
+      '#transaction .btn'
+    );
+
+  if(saveButton){
+    saveButton.textContent =
+      'Kaydet';
+  }
+
+}
+
+const TOKEN =
+  localStorage.getItem('yavuz_token');
+
+if(!TOKEN){
+  location.href='/';
+}
+
+
+let companyLogo='';
+
+
+const headers=()=>({
+  Authorization:'Bearer '+TOKEN,
+  'Content-Type':'application/json'
+});
+
+
+async function api(url,opt={}){
+
+  const r=await fetch(url,{
+    ...opt,
+    headers:{
+      ...headers(),
+      ...(opt.headers||{})
+    }
+  });
+
+  let j={};
+
+  try{
+    j=await r.json()
+  }catch{}
+
+  if(r.status===401){
+    logout();
+    throw Error(
+      'Oturum süresi doldu.'
+    );
+  }
+
+  if(!r.ok){
+    throw Error(
+      j.error||'İşlem başarısız'
+    );
+  }
+
+  return j;
+}
+
+
+const money=n=>
+  Number(n||0).toLocaleString(
+    'tr-TR',
+    {
+      minimumFractionDigits:2,
+      maximumFractionDigits:2
+    }
+  )+' TL';
+
+
+function dt(v){
+
+  if(!v)return '';
+
+  const s=
+    String(v).slice(0,10);
+
+  const m=
+    s.match(
+      /^(\d{4})-(\d{2})-(\d{2})$/
+    );
+
+  return m
+    ? `${m[3]}.${m[2]}.${m[1]}`
+    : s;
+}
+
+
+let customers=[];
+
+
+function go(id){
+
+  document
+    .querySelectorAll('.page')
+    .forEach(x=>
+      x.classList.remove('active')
+    );
+
+
+  document
+    .getElementById(id)
+    .classList.add('active');
+
+
+  document
+    .querySelectorAll('.nav button')
+    .forEach(b=>{
+      if(b.dataset.p){
+        b.classList.toggle(
+          'active',
+          b.dataset.p===id
+        );
+      }
+    });
+
+
+  document.getElementById(
+    'title'
+  ).textContent={
+    dashboard:'Hoş Geldiniz',
+    customers:'Müşteriler',
+    transaction:'İşlem Ekle',
+    report:'Cari Hesap Raporu',
+    jobs:'Günlük Saha İşleri',
+    pdf:'PDF Oluştur',
+    settings:'Firma Ayarları'
+  }[id];
+
+
+  if(
+    id==='customers'||
+    id==='transaction'||
+    id==='report'||
+    id==='jobs'
+  ){
+    loadCustomers();
+  }
+
+
+  if(id==='report'){
+    setTimeout(
+      renderReport,
+      0
+    );
+  }
+
+
+  if(id==='jobs'){
+    setTimeout(
+      loadJobs,
+      0
+    );
+  }
+
+
+  if(id==='pdf'){
+    setTimeout(
+      renderPDF,
+      0
+    );
+  }
+
+
+  if(id==='settings'){
+    loadSettings();
+  }
+}
+
+
+document
+  .querySelectorAll('[data-p]')
+  .forEach(b=>
+    b.addEventListener(
+      'click',
+      ()=>go(b.dataset.p)
+    )
+  );
+
+
+function logout(){
+
+  localStorage.removeItem(
+    'yavuz_token'
+  );
+
+  location.href='/';
+}
+
+
+/* =========================
+   ŞİRKET BİLGİLERİ
+========================= */
+
+async function loadMe(){
+
+  const j=
+    await api('/api/auth/me');
+
+
+  companyLogo =
+    j.company.logo_url || '';
+
+
+  const companyNameEl =
+    document.getElementById(
+      'companyName'
+    );
+
+
+  const companyLogoImg =
+    document.getElementById(
+      'companyLogoImg'
+    );
+
+
+  const companyLogoBox =
+    document.getElementById(
+      'companyLogoBox'
+    );
+
+
+  /* Şirket adı */
+
+  companyNameEl.textContent =
+    j.company.company_name ||
+    'ŞİRKET ADI';
+
+
+  /* Şirket logosu */
+
+  if(companyLogo){
+
+    companyLogoImg.src =
+      companyLogo;
+
+    companyLogoImg.style.display =
+      'block';
+
+    companyLogoBox.classList.remove(
+      'empty'
+    );
+
+  }else{
+
+    companyLogoImg.src='';
+
+    companyLogoImg.style.display =
+      'none';
+
+    companyLogoBox.classList.add(
+      'empty'
+    );
+  }
+
+
+  /* Firma ayarları */
+
+  setName.value =
+    j.company.company_name || '';
+
+  setTax.value =
+    j.company.tax_number || '';
+
+  setPhone.value =
+    j.company.phone || '';
+
+  setEmail.value =
+    j.company.email || '';
+
+  setAddress.value =
+    j.company.address || '';
+}
+
+
+/* =========================
+   MÜŞTERİLER
+========================= */
+
+async function loadCustomers(){
+
+  customers =
+    await api('/api/customers');
+
+
+  const opts =
+    customers
+      .map(c=>
+        `<option value="${c.id}">
+          ${c.company_name}
+        </option>`
+      )
+      .join('');
+
+
+  txCust.innerHTML=opts;
+
+  repCust.innerHTML=opts;
+
+  jobCust.innerHTML=
+    '<option value="">Müşteri seçilmedi</option>'+
+    opts;
+
+
+customersBox.innerHTML =
+  customers.length
+    ? customers.map(c => `
+      <div class="customer">
+
+        <div style="flex:1">
+
+          <b>${c.company_name}</b>
+
+          <small>
+            ${c.phone || ''}
+            ${c.email ? ' · ' + c.email : ''}
+          </small>
+
+        </div>
+
+
+        <div style="
+          display:flex;
+          align-items:center;
+          gap:10px;
+        ">
+
+          <strong>
+            ${money(c.balance)}
+          </strong>
+
+
+          <button
+            class="btn light"
+            style="padding:7px 10px;font-size:12px"
+            onclick="editCustomer(${c.id})">
+            Düzenle
+          </button>
+
+
+          <button
+            class="btn red"
+            style="padding:7px 10px;font-size:12px"
+            onclick="deleteCustomer(${c.id})">
+            Sil
+          </button>
+
+        </div>
+
+      </div>
+    `).join('')
+
+    : '<div class="muted">Henüz müşteri yok.</div>';
+
+
+  sc.textContent =
+    customers.length;
+
+
+  sbal.textContent =
+    money(
+      customers.reduce(
+        (s,c)=>
+          s+Number(c.balance||0),
+        0
+      )
+    );
+
+
+  sdebt.textContent =
+    money(
+      customers.reduce(
+        (s,c)=>
+          s+Math.max(
+            0,
+            Number(c.balance||0)
+          ),
+        0
+      )
+    );
+}
+
+
+async function addCustomer(){
+
+  const company_name=
+    prompt(
+      'Müşteri firma adı:'
+    );
+
+  if(!company_name)return;
+
+  try{
+
+    await api(
+      '/api/customers',
+      {
+        method:'POST',
+        body:JSON.stringify({
+          company_name
+        })
+      }
+    );
+
+    await loadCustomers();
+
+  }catch(e){
+
+    alert(e.message);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+async function editCustomer(id){
+
+  const customer =
+    customers.find(
+      c => Number(c.id) === Number(id)
+    );
+
+  if(!customer){
+    alert('Müşteri bulunamadı.');
+    return;
+  }
+
+
+  const company_name =
+    prompt(
+      'Müşteri firma adı:',
+      customer.company_name || ''
+    );
+
+  if(company_name === null){
+    return;
+  }
+
+
+  if(!company_name.trim()){
+    alert('Firma adı boş bırakılamaz.');
+    return;
+  }
+
+
+  const phone =
+    prompt(
+      'Telefon:',
+      customer.phone || ''
+    );
+
+  if(phone === null){
+    return;
+  }
+
+
+  const email =
+    prompt(
+      'E-posta:',
+      customer.email || ''
+    );
+
+  if(email === null){
+    return;
+  }
+
+
+  const tax_number =
+    prompt(
+      'Vergi No:',
+      customer.tax_number || ''
+    );
+
+  if(tax_number === null){
+    return;
+  }
+
+
+  const address =
+    prompt(
+      'Adres:',
+      customer.address || ''
+    );
+
+  if(address === null){
+    return;
+  }
+
+
+  try{
+
+    await api(
+      '/api/customers/' + id,
+      {
+        method:'PUT',
+
+        body:JSON.stringify({
+          company_name:
+            company_name.trim(),
+
+          tax_number:
+            tax_number.trim(),
+
+          phone:
+            phone.trim(),
+
+          email:
+            email.trim(),
+
+          address:
+            address.trim()
+        })
+      }
+    );
+
+
+    await loadCustomers();
+
+
+    if(
+      repCust.value === String(id)
+    ){
+      await renderReport();
+    }
+
+
+    alert('Müşteri bilgileri güncellendi.');
+
+  }catch(e){
+
+    alert(e.message);
+
+  }
+}
+
+
+async function deleteCustomer(id){
+
+  const customer =
+    customers.find(
+      c => Number(c.id) === Number(id)
+    );
+
+
+  if(!customer){
+    alert('Müşteri bulunamadı.');
+    return;
+  }
+
+
+  const confirmed =
+    confirm(
+      `"${customer.company_name}" müşterisini silmek istediğinize emin misiniz?\n\nBu müşteriye ait cari işlemler de silinecektir.`
+    );
+
+
+  if(!confirmed){
+    return;
+  }
+
+
+  try{
+
+    await api(
+      '/api/customers/' + id,
+      {
+        method:'DELETE'
+      }
+    );
+
+
+    await loadCustomers();
+
+
+    if(customers.length){
+
+      repCust.value =
+        String(customers[0].id);
+
+      await renderReport();
+
+    }else{
+
+      repCust.innerHTML='';
+      txCust.innerHTML='';
+      jobCust.innerHTML=
+        '<option value="">Müşteri seçilmedi</option>';
+
+      report.innerHTML=
+        '<div class="muted">Henüz müşteri yok.</div>';
+
+    }
+
+
+    alert('Müşteri silindi.');
+
+  }catch(e){
+
+    alert(e.message);
+
+  }
+}
+
+
+
+/* =========================
+   CARİ İŞLEMLER
+========================= */
+let editingTransactionId = null;
+
+
+async function saveTx(){
+
+  txMsg.textContent='';
+
+
+  try{
+
+    if(!txCust.value){
+
+      throw new Error(
+        'Önce müşteri seçin.'
+      );
+
+    }
+
+
+    if(!txDate.value){
+
+      throw new Error(
+        'Tarih seçin.'
+      );
+
+    }
+
+
+    if(
+      txAmount.value === '' ||
+      Number(txAmount.value) < 0
+    ){
+
+      throw new Error(
+        'Geçerli bir tutar girin.'
+      );
+
+    }
+
+
+    const payload = {
+
+      customer_id:
+        Number(txCust.value),
+
+      transaction_date:
+        txDate.value,
+
+      due_date:
+        txDue.value || null,
+
+      movement_type:
+        txType.value,
+
+      description:
+        txDesc.value.trim(),
+
+      document_no:
+        txInv.value.trim(),
+
+      amount:
+        Number(txAmount.value)
+
+    };
+
+
+    const url =
+      editingTransactionId
+        ? '/api/cari/transactions/' +
+          editingTransactionId
+
+        : '/api/cari/transactions';
+
+
+    await api(
+      url,
+      {
+        method:
+          editingTransactionId
+            ? 'PUT'
+            : 'POST',
+
+        body:
+          JSON.stringify(payload)
+      }
+    );
+
+
+    txMsg.textContent =
+      editingTransactionId
+        ? 'Cari işlem güncellendi.'
+        : 'Cari işlem kaydedildi.';
+
+    txMsg.className =
+      'msg success';
+
+
+    editingTransactionId = null;
+
+
+    txAmount.value='';
+    txDesc.value='';
+    txInv.value='';
+
+
+    const saveButton =
+      document.querySelector(
+        '#transaction .btn'
+      );
+
+    if(saveButton){
+      saveButton.textContent =
+        'Kaydet';
+    }
+
+
+    await loadCustomers();
+
+
+    if(repCust.value){
+
+      await renderReport();
+
+    }
+
+
+  }catch(e){
+
+    txMsg.textContent =
+      e.message;
+
+    txMsg.className =
+      'msg error';
+
+  }
+
+}
+
+
+
+
+/* =========================
+   CARİ RAPOR
+========================= */
+async function renderReport(){
+
+  if(
+    !repCust.value ||
+    !customers.length
+  ){
+
+    report.innerHTML =
+      '<div class="muted">Müşteri seçin.</div>';
+
+    return;
+  }
+
+
+  const j =
+    await api(
+      '/api/cari/customers/' +
+      repCust.value
+    );
+
+
+  report.innerHTML = `
+
+    <div class="reportHead">
+
+      <div class="cust">
+        ${j.customer.company_name}
+      </div>
+
+      <div class="firm">
+        ${companyName.textContent}
+      </div>
+
+    </div>
+
+
+    <table>
+
+      <thead>
+
+        <tr>
+          <th>Tarih</th>
+          <th>Vade</th>
+          <th>Hareket</th>
+          <th>Açıklama</th>
+          <th>Belge / Fatura No</th>
+          <th>Ödeme</th>
+          <th>Borç</th>
+          <th>Alacak</th>
+          <th>Bakiye</th>
+          <th>İşlem</th>
+        </tr>
+
+      </thead>
+
+
+      <tbody>
+
+        ${
+          j.transactions.length
+
+          ? j.transactions.map(x => `
+
+              <tr>
+
+                <td>
+                  ${dt(x.transaction_date)}
+                </td>
+
+                <td>
+                  ${dt(x.due_date)}
+                </td>
+
+                <td>
+                  ${x.movement_type}
+                </td>
+
+                <td>
+                  ${x.description || ''}
+                </td>
+
+                <td>
+                  ${x.document_no || ''}
+                </td>
+
+                <td>
+                  ${
+                    x.payment != null
+                      ? money(x.payment)
+                      : ''
+                  }
+                </td>
+
+                <td>
+                  ${
+                    x.debit != null
+                      ? money(x.debit)
+                      : ''
+                  }
+                </td>
+
+                <td>
+                  ${
+                    x.credit != null
+                      ? money(x.credit)
+                      : ''
+                  }
+                </td>
+
+                <td>
+                  ${money(x.balance)}
+                </td>
+
+                <td>
+
+                  <div style="
+                    display:flex;
+                    gap:5px;
+                    flex-wrap:wrap;
+                  ">
+
+                    <button
+                      class="btn light"
+                      style="
+                        padding:6px 8px;
+                        font-size:11px;
+                      "
+                      onclick="editTransaction(${x.id})">
+                      Düzenle
+                    </button>
+
+
+                    <button
+                      class="btn red"
+                      style="
+                        padding:6px 8px;
+                        font-size:11px;
+                      "
+                      onclick="deleteTransaction(${x.id})">
+                      Sil
+                    </button>
+
+                  </div>
+
+                </td>
+
+              </tr>
+
+            `).join('')
+
+          : `
+
+              <tr>
+
+                <td
+                  colspan="10"
+                  style="
+                    text-align:center;
+                    color:var(--muted);
+                    padding:20px;
+                  "
+                >
+                  Bu müşteriye ait işlem bulunmuyor.
+                </td>
+
+              </tr>
+
+            `
+        }
+
+
+        <!-- TOPLAM -->
+
+        <tr>
+
+          <td colspan="5">
+            <b>TOPLAM</b>
+          </td>
+
+          <td>
+            <b>${money(j.totals.payment)}</b>
+          </td>
+
+          <td>
+            <b>${money(j.totals.debit)}</b>
+          </td>
+
+          <td>
+            <b>${money(j.totals.credit)}</b>
+          </td>
+
+          <td>
+            <b>${money(j.totals.balance)}</b>
+          </td>
+
+          <td></td>
+
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  `;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+async function editTransaction(id){
+
+  try{
+
+    const customerId =
+      repCust.value;
+
+
+    const j =
+      await api(
+        '/api/cari/customers/' +
+        customerId
+      );
+
+
+    const tx =
+      j.transactions.find(
+        x => Number(x.id) === Number(id)
+      );
+
+
+    if(!tx){
+
+      alert(
+        'İşlem bulunamadı.'
+      );
+
+      return;
+    }
+
+
+    editingTransactionId =
+      id;
+
+
+    go('transaction');
+
+
+    setTimeout(() => {
+
+      txCust.value =
+        String(customerId);
+
+
+      txDate.value =
+        String(
+          tx.transaction_date
+        ).slice(0,10);
+
+
+      txDue.value =
+        tx.due_date
+          ? String(
+              tx.due_date
+            ).slice(0,10)
+          : '';
+
+
+      txType.value =
+        tx.movement_type;
+
+
+      txDesc.value =
+        tx.description || '';
+
+
+      txInv.value =
+        tx.document_no || '';
+
+
+      txAmount.value =
+        tx.amount;
+
+
+      txMsg.textContent =
+        'İşlem düzenleme modunda.';
+
+
+      txMsg.className =
+        'msg';
+
+
+      const saveButton =
+        document.querySelector(
+          '#transaction .btn'
+        );
+
+
+      if(saveButton){
+
+        saveButton.textContent =
+          'İşlemi Güncelle';
+
+      }
+
+    }, 50);
+
+
+  }catch(e){
+
+    alert(e.message);
+
+  }
+}
+
+
+async function deleteTransaction(id){
+
+  const confirmed =
+    confirm(
+      'Bu cari işlemi silmek istediğinize emin misiniz?'
+    );
+
+
+  if(!confirmed){
+    return;
+  }
+
+
+  try{
+
+    await api(
+      '/api/cari/transactions/' +
+      id,
+      {
+        method:'DELETE'
+      }
+    );
+
+
+    await loadCustomers();
+
+
+    if(repCust.value){
+
+      await renderReport();
+
+    }
+
+
+    alert(
+      'Cari işlem silindi.'
+    );
+
+
+  }catch(e){
+
+    alert(e.message);
+
+  }
+}
+
+
+
+/* =========================
+   PDF ÖNİZLEME
+========================= */
+
+async function renderPDF(){
+
+  if(!customers.length){
+
+    pdfBox.innerHTML=
+      '<div class="muted">Önce müşteri ekleyin.</div>';
+
+    return;
+  }
+
+
+  if(!repCust.value){
+
+    repCust.value =
+      customers[0].id;
+  }
+
+
+  const j=
+    await api(
+      '/api/cari/customers/'+
+      repCust.value
+    );
+
+
+  const logo =
+    companyLogo
+      ? `<img
+          src="${companyLogo}"
+          alt="Logo">`
+      : '';
+
+
+  pdfBox.innerHTML=`
+
+    <div class="reportHead">
+
+      <div class="pdf-company">
+
+        ${logo}
+
+        <div>
+
+          <div
+            style="
+              font-weight:800;
+              font-size:17px
+            ">
+
+            ${companyName.textContent}
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="firm">
+
+        ${j.customer.company_name}
+
+      </div>
+
+    </div>
+
+
+    <div
+      style="
+        margin:8px 0 16px;
+        font-size:13px
+      ">
+
+      <b>Müşteri / Firma:</b>
+      ${j.customer.company_name}
+
+
+      <span style="float:right">
+
+        <b>Rapor Tarihi:</b>
+        ${new Date().toLocaleDateString(
+          'tr-TR'
+        )}
+
+      </span>
+
+    </div>
+
+
+    ${reportTable(j)}
+
+
+    <div
+      style="
+        text-align:center;
+        margin-top:20px;
+        font-weight:700
+      ">
+
+      ${companyName.textContent}
+
+    </div>
+
+  `;
+}
+
+
+function reportTable(j){
+
+  return `
+
+    <table>
+
+      <thead>
+
+        <tr>
+
+          <th>Tarih</th>
+          <th>Vade</th>
+          <th>Hareket</th>
+          <th>Açıklama</th>
+          <th>Belge / Fatura No</th>
+          <th>Ödeme</th>
+          <th>Borç</th>
+          <th>Alacak</th>
+          <th>Bakiye</th>
+
+        </tr>
+
+      </thead>
+
+
+      <tbody>
+
+        ${j.transactions.map(x=>`
+
+          <tr>
+
+            <td>
+              ${dt(x.transaction_date)}
+            </td>
+
+            <td>
+              ${dt(x.due_date)}
+            </td>
+
+            <td>
+              ${x.movement_type}
+            </td>
+
+            <td>
+              ${x.description||''}
+            </td>
+
+            <td>
+              ${x.document_no||''}
+            </td>
+
+            <td>
+              ${
+                x.payment!=null
+                  ? money(x.payment)
+                  : ''
+              }
+            </td>
+
+            <td>
+              ${
+                x.debit!=null
+                  ? money(x.debit)
+                  : ''
+              }
+            </td>
+
+            <td>
+              ${
+                x.credit!=null
+                  ? money(x.credit)
+                  : ''
+              }
+            </td>
+
+            <td>
+              ${money(x.balance)}
+            </td>
+
+          </tr>
+
+        `).join('')}
+
+
+        <tr>
+
+          <td colspan="4">
+            <b>TOPLAM</b>
+          </td>
+
+          <td></td>
+
+        <td>
+        ${money(j.totals.payment)}
+        </td>
+
+        <td>
+        ${money(j.totals.debit)}
+        </td>
+
+        <td>
+        ${money(j.totals.credit)}
+        </td>
+
+          <td>
+            ${money(j.totals.balance)}
+          </td>
+
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  `;
+}
+
+
+/* =========================
+   MALZEME
+========================= */
+
+function addMaterial(m={}){
+
+  const d=
+    document.createElement('div');
+
+  d.className='material';
+
+
+  d.innerHTML=
+    '<input class="mn" placeholder="Malzeme adı" value="'+
+    (m.material_name||'')+
+    '">' +
+
+    '<input class="mq" type="number" step="0.001" placeholder="Miktar" value="'+
+    (m.quantity??'')+
+    '">' +
+
+    '<input class="mu" placeholder="Birim" value="'+
+    (m.unit||'')+
+    '">' +
+
+    '<input class="mp" type="number" step="0.01" placeholder="Birim fiyat" value="'+
+    (m.unit_price??'')+
+    '">' +
+
+    '<button type="button" onclick="this.parentElement.remove()">Sil</button>';
+
+
+  materials.appendChild(d);
+}
+
+
+/* =========================
+   SAHA İŞLERİ
+========================= */
+
+function resetJob(){
+
+  editingJobId=null;
+
+  jobDate.value =
+    new Date()
+      .toISOString()
+      .slice(0,10);
+
+  jobLocation.value='';
+  jobDesc.value='';
+  jobLabor.value='';
+  jobTotal.value='';
+
+  materials.innerHTML='';
+
+  addMaterial();
+
+  jobMsg.textContent='';
+
+  const btn=
+    document.querySelector(
+      '#jobs button.btn.green'
+    );
+
+  if(btn){
+    btn.textContent=
+      'Saha İşini Kaydet';
+  }
+}
+
+
+let editingJobId=null;
+
+
+async function saveJob(){
+
+  jobMsg.textContent='';
+
+  try{
+
+    const ms=
+      [
+        ...document.querySelectorAll(
+          '.material'
+        )
+      ]
+      .map(r=>({
+
+        material_name:
+          r.querySelector(
+            '.mn'
+          ).value.trim(),
+
+        quantity:
+          Number(
+            r.querySelector(
+              '.mq'
+            ).value||0
+          ),
+
+        unit:
+          r.querySelector(
+            '.mu'
+          ).value,
+
+        unit_price:
+          Number(
+            r.querySelector(
+              '.mp'
+            ).value||0
+          )
+
+      }))
+      .filter(
+        x=>x.material_name
+      );
+
+
+    const payload={
+
+      customer_id:
+        jobCust.value
+          ? Number(jobCust.value)
+          : null,
+
+      job_date:
+        jobDate.value,
+
+      location:
+        jobLocation.value.trim(),
+
+      description:
+        jobDesc.value,
+
+      labor_fee:
+        Number(
+          jobLabor.value||0
+        ),
+
+      total_fee:
+        Number(
+          jobTotal.value||0
+        ),
+
+      materials:ms
+    };
+
+
+    if(
+      !payload.job_date||
+      !payload.location
+    ){
+
+      throw new Error(
+        'Tarih ve gidilen yer zorunludur.'
+      );
+    }
+
+
+    const url=
+      editingJobId
+        ? '/api/field-jobs/'+
+          editingJobId
+        : '/api/field-jobs';
+
+
+    await api(
+      url,
+      {
+        method:
+          editingJobId
+            ? 'PUT'
+            : 'POST',
+
+        body:
+          JSON.stringify(
+            payload
+          )
+      }
+    );
+
+
+    jobMsg.textContent=
+      editingJobId
+        ? 'Saha işi güncellendi.'
+        : 'Saha işi kaydedildi.';
+
+
+    jobMsg.className=
+      'msg success';
+
+
+    editingJobId=null;
+
+    resetJob();
+
+    await loadJobs();
+
+  }catch(e){
+
+    jobMsg.textContent=
+      e.message;
+
+    jobMsg.className=
+      'msg error';
+  }
+}
+
+
+function editJob(job){
+
+  editingJobId=
+    job.id;
+
+
+  jobDate.value=
+    dt(job.job_date);
+
+
+  jobCust.value=
+    job.customer_id
+      ? String(job.customer_id)
+      : '';
+
+
+  jobLocation.value=
+    job.location||'';
+
+
+  jobDesc.value=
+    job.description||'';
+
+
+  jobLabor.value=
+    job.labor_fee??0;
+
+
+  jobTotal.value=
+    job.total_fee??0;
+
+
+  materials.innerHTML='';
+
+
+  (job.materials||[])
+    .forEach(
+      m=>addMaterial(m)
+    );
+
+
+  if(
+    !(job.materials||[]).length
+  ){
+
+    addMaterial();
+
+  }
+
+
+  const btn=
+    document.querySelector(
+      '#jobs .btn.green'
+    );
+
+
+  if(btn){
+
+    btn.textContent=
+      'İşi Güncelle';
+
+  }
+
+
+  document
+    .getElementById('jobMsg')
+    .scrollIntoView({
+      behavior:'smooth',
+      block:'nearest'
+    });
+}
+
+
+async function deleteJob(id){
+
+  if(
+    !confirm(
+      'Bu saha işini silmek istediğinize emin misiniz?'
+    )
+  ){
+
+    return;
+
+  }
+
+
+  try{
+
+    await api(
+      '/api/field-jobs/'+id,
+      {
+        method:'DELETE'
+      }
+    );
+
+
+    await loadJobs();
+
+  }catch(e){
+
+    alert(e.message);
+
+  }
+}
+
+
+/* =========================
+   FİRMA AYARLARI
+========================= */
+
+async function loadSettings(){
+
+  await loadMe();
+
+}
+
+
+async function saveSettings(){
+
+  try{
+
+    let logoData=null;
+
+    const f=
+      setLogo.files &&
+      setLogo.files[0];
+
+
+    if(f){
+
+      logoData=
+        await new Promise(
+          (resolve,reject)=>{
+
+            const r=
+              new FileReader();
+
+            r.onload=
+              ()=>resolve(
+                r.result
+              );
+
+            r.onerror=
+              reject;
+
+            r.readAsDataURL(f);
+
+          }
+        );
+
+    }
+
+
+    const payload={
+
+      company_name:
+        setName.value,
+
+      tax_number:
+        setTax.value,
+
+      phone:
+        setPhone.value,
+
+      email:
+        setEmail.value,
+
+      address:
+        setAddress.value
+
+    };
+
+
+    if(logoData){
+
+      payload.logo_url=
+        logoData;
+
+    }
+
+
+    const j=
+      await api(
+        '/api/settings/company',
+        {
+          method:'PUT',
+          body:
+            JSON.stringify(
+              payload
+            )
+        }
+      );
+
+
+    /* Güncel şirket bilgilerini hemen uygula */
+
+    companyLogo =
+      j.logo_url || '';
+
+
+    document.getElementById(
+      'companyName'
+    ).textContent =
+      j.company_name ||
+      'ŞİRKET ADI';
+
+
+    const companyLogoImg =
+      document.getElementById(
+        'companyLogoImg'
+      );
+
+
+    const companyLogoBox =
+      document.getElementById(
+        'companyLogoBox'
+      );
+
+
+    if(companyLogo){
+
+      companyLogoImg.src=
+        companyLogo;
+
+      companyLogoImg.style.display=
+        'block';
+
+      companyLogoBox.classList.remove(
+        'empty'
+      );
+
+    }else{
+
+      companyLogoImg.src='';
+
+      companyLogoImg.style.display=
+        'none';
+
+      companyLogoBox.classList.add(
+        'empty'
+      );
+
+    }
+
+
+    setMsg.textContent =
+      'Firma bilgileri kaydedildi.';
+
+    setMsg.className =
+      'msg success';
+
+
+    /* Yeni logo ile PDF önizlemesini de güncelle */
+
+    if(
+      document.getElementById(
+        'pdf'
+      ).classList.contains('active')
+    ){
+
+      renderPDF();
+
+    }
+
+  }catch(e){
+
+    setMsg.textContent=
+      e.message;
+
+    setMsg.className=
+      'msg error';
+
+  }
+}
+
+
+/* =========================
+   TARİHLER
+========================= */
+
+today.textContent=
+  new Date().toLocaleDateString(
+    'tr-TR'
+  );
+
+
+rdate.value=
+  new Date().toLocaleDateString(
+    'tr-TR'
+  );
+
+
+txDate.value=
+  new Date()
+    .toISOString()
+    .slice(0,10);
+
+
+txDue.value=
+  txDate.value;
+
+
+jobDate.value=
+  txDate.value;
+
+
+addMaterial();
+
+
+/* =========================
+   İLK YÜKLEME
+========================= */
+
+loadMe()
+  .then(loadCustomers)
+  .then(()=>{
+
+    if(customers.length){
+
+      repCust.value=
+        customers[0].id;
+
+      renderReport();
+
+    }
+
+  })
+  .catch(e=>{
+
+    console.error(e);
+
+    logout();
+
+  });
+
+
+/* =========================
+   GÜNLÜK İŞLERİ LİSTELE
+========================= */
+
+async function loadJobs(){
+
+  const box =
+    document.getElementById(
+      "jobsBox"
+    );
+
+
+  if(!box)return;
+
+
+  box.innerHTML=
+    '<div class="muted">Yükleniyor...</div>';
+
+
+  try{
+
+    const params=[];
+
+
+    const fromValue =
+      document
+        .getElementById("from")
+        ?.value;
+
+
+    const toValue =
+      document
+        .getElementById("to")
+        ?.value;
+
+
+    if(fromValue){
+
+      params.push(
+        "from="+
+        encodeURIComponent(
+          fromValue
+        )
+      );
+
+    }
+
+
+    if(toValue){
+
+      params.push(
+        "to="+
+        encodeURIComponent(
+          toValue
+        )
+      );
+
+    }
+
+
+    const url =
+      "/api/field-jobs" +
+      (
+        params.length
+          ? "?" +
+            params.join("&")
+          : ""
+      );
+
+
+    const jobs =
+      await api(url);
+
+
+    if(
+      !jobs||
+      jobs.length===0
+    ){
+
+      box.innerHTML=
+        '<div class="muted" style="padding:20px 0">Kayıt bulunamadı.</div>';
+
+      return;
+
+    }
+
+
+    box.innerHTML=
+      jobs.map(job=>{
+
+        const date =
+          job.job_date
+
+            ? new Date(
+                String(
+                  job.job_date
+                ).slice(0,10) +
+                "T00:00:00"
+              ).toLocaleDateString(
+                "tr-TR"
+              )
+
+            : "";
+
+
+        const materials =
+          Array.isArray(
+            job.materials
+          )
+
+            ? job.materials
+                .map(m=>
+                  `${m.material_name} (${m.quantity} ${m.unit||""})`
+                )
+                .join(" • ")
+
+            : "";
+
+
+        return `
+
+          <div
+            class="job-item"
+            style="
+              padding:14px 0;
+              border-bottom:1px solid var(--line);
+            "
+          >
+
+            <div
+              style="
+                display:flex;
+                justify-content:space-between;
+                gap:15px
+              "
+            >
+
+              <div>
+
+                <strong>
+                  ${date} · ${job.location||""}
+                </strong>
+
+
+                <div
+                  class="muted"
+                  style="margin-top:4px"
+                >
+
+                  ${
+                    job.company_name ||
+                    "Müşteri seçilmedi"
+                  }
+
+                </div>
+
+
+                <div
+                  style="margin-top:5px"
+                >
+
+                  ${
+                    job.description||
+                    ""
+                  }
+
+                </div>
+
+
+                ${
+                  materials
+                    ? `
+
+                      <div
+                        class="muted"
+                        style="margin-top:6px"
+                      >
+
+                        ${materials}
+
+                      </div>
+
+                    `
+                    : ""
+                }
+
+              </div>
+
+
+              <div
+                style="text-align:right"
+              >
+
+                <strong>
+                  ${money(job.total_fee)}
+                </strong>
+
+
+                <div
+                  style="margin-top:8px"
+                >
+
+                  <button
+                    class="mini"
+                    style="
+                      background:#eaf2fb;
+                      color:#27517d;
+                      margin-right:5px;
+                    "
+                    onclick="editJob(${job.id})"
+                  >
+                    Düzenle
+                  </button>
+
+
+                  <button
+                    class="mini red"
+                    onclick="deleteJob(${job.id})"
+                  >
+                    Sil
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        `;
+
+      }).join("");
+
+
+  }catch(error){
+
+    console.error(error);
+
+
+    box.innerHTML=`
+
+      <div
+        class="error"
+        style="padding:20px 0"
+      >
+
+        ${error.message}
+
+      </div>
+
+    `;
+
+  }
+
+}
+
+
+/* =========================
+   PDF İNDİR
+========================= */
+
+async function downloadPDF(){
+
+  if(
+    !repCust ||
+    !repCust.value
+  ){
+
+    alert(
+      "Önce müşteri seçin."
+    );
+
+    return;
+  }
+
+
+  try{
+
+    const customerId=
+      repCust.value;
+
+
+    const response=
+      await fetch(
+        `/api/pdf/cari/${customerId}`,
+        {
+          headers:{
+            Authorization:
+              "Bearer "+TOKEN
+          }
+        }
+      );
+
+
+    if(!response.ok){
+
+      const error=
+        await response
+          .json()
+          .catch(
+            ()=>({})
+          );
+
+
+      throw new Error(
+        error.error ||
+        "PDF oluşturulamadı."
+      );
+
+    }
+
+
+    const blob=
+      await response.blob();
+
+
+    const url=
+      window.URL.createObjectURL(
+        blob
+      );
+
+
+    const a=
+      document.createElement(
+        "a"
+      );
+
+
+    a.href=url;
+
+
+    a.download=
+      "cari-hesap-" +
+      customerId +
+      ".pdf";
+
+
+    document.body.appendChild(a);
+
+
+    a.click();
+
+
+    a.remove();
+
+
+    window.URL.revokeObjectURL(
+      url
+    );
+
+
+  }catch(error){
+
+    console.error(error);
+
+    alert(
+      error.message
+    );
+
+  }
+
+}
+
+</script>
+
+</body>
+</html>

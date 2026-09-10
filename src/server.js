@@ -1,0 +1,6 @@
+require('dotenv').config();const express=require('express');const cors=require('cors');const fs=require('fs');const path=require('path');const pool=require('./db/pool');
+const app=express();app.use(cors());app.use(express.json({limit:'2mb'}));app.use(express.static(path.join(__dirname,'..','public')));
+app.get('/api/health',async(_req,res)=>{try{await pool.query('SELECT 1');res.json({ok:true,database:'connected'})}catch(e){res.status(503).json({ok:false,database:'disconnected'})}});
+app.use('/api/auth',require('./routes/auth'));app.use('/api/customers',require('./routes/customers'));app.use('/api/cari',require('./routes/cari'));app.use('/api/field-jobs',require('./routes/fieldJobs'));app.use('/api/settings',require('./routes/settings'));app.use('/api/pdf',require('./routes/pdf'));
+app.use((e,_q,res,_n)=>{console.error(e);res.status(500).json({error:'Sunucu hatası.',detail:process.env.NODE_ENV==='development'?e.message:undefined})});
+const port=Number(process.env.PORT||3000);async function start(){const schema=fs.readFileSync(path.join(__dirname,'db','schema.sql'),'utf8');await pool.query(schema);app.listen(port,()=>console.log(`Yavuz Su Mekanik: http://localhost:${port}`))}start().catch(e=>{console.error('Başlatılamadı:',e);process.exit(1)});
