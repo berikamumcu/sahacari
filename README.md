@@ -1,33 +1,48 @@
-# Yavuz Su Mekanik - Tam Sistem
+# SahaCari
 
-## İçindekiler
+Saha ve cari hesap yönetimi için geliştirilen çoklu şirket destekli web uygulaması.
+
+## Özellikler
+
 - Kayıt ol / giriş yap
 - Her şirket için ayrı veri alanı
-- Müşteri yönetimi
-- Cari hareketler: satış, tahsilat, devir, iade
-- Otomatik borç/alacak/bakiye
-- Cari rapor + en altta TOPLAM
-- PDF/yazdırma önizlemesi
+- Şirket bazlı kullanıcı ve müşteri yönetimi
+- Müşteri ekleme, düzenleme ve silme
+- Cari hareket ekleme, düzenleme ve silme
+- Satış, tahsilat, devir ve iade işlemleri
+- Otomatik borç, ödeme, alacak ve bakiye hesaplama
+- Cari hesap raporu
+- Cari hesap toplamları
+- Şirket bazlı PDF cari hesap ekstresi
+- Şirket logosunu PDF ve panelde gösterme
+- Firma bilgileri ve logo yönetimi
 - Günlük saha işleri
-- Gidilen yer, müşteri, yapılan iş, işçilik ve toplam ücret
-- Kullanılan malzeme + miktar + birim + birim fiyat
+- Saha işi ekleme, düzenleme ve silme
+- Gidilen yer ve yapılan iş takibi
+- İşçilik ve toplam ücret
+- Kullanılan malzeme, miktar, birim ve birim fiyat takibi
 - Saha işi tarih aralığı filtreleme
-- Firma ayarları
+- PostgreSQL veritabanı
+- JWT tabanlı kimlik doğrulama
+- Çoklu şirket (multi-tenant) yapı
 
-## Kurulum
-1. PostgreSQL'de `yavuz_cari` veritabanı oluştur.
+## Teknolojiler
+
+- Node.js
+- Express.js
+- PostgreSQL
+- JavaScript
+- HTML
+- CSS
+- JWT
+- PDFKit
+
+## Yerel Kurulum
+
+1. PostgreSQL'de `yavuz_cari` veritabanını oluştur.
 2. `.env.example` dosyasını `.env` olarak kopyala.
-3. `.env` içindeki DATABASE_URL ve JWT_SECRET'i ayarla.
-4. `npm install`
-5. `npm start`
-6. `http://localhost:3000`
+3. `.env` içindeki `DATABASE_URL` ve `JWT_SECRET` değerlerini ayarla.
+4. Bağımlılıkları yükle:
 
-## Not
-Server açılırken schema.sql otomatik çalışır ve önceki prototipte oluşmuş boş/eski tablolar için temel migration kolonlarını ekler. Gerçek müşteri verisi eklemeden önce yedek almak doğru olur.
-
-## Güncellemeler v1.2
-- Gerçek server taraflı PDF endpointi: `/api/pdf/cari/:customerId`
-- PDF şirket adı / müşteri adı ile oluşturulur; alt kısımda sadece şirket adı bulunur.
-- Günlük saha işlerinde ISO tarihleri düzgün gösterilir.
-- Saha işi düzenleme ve silme eklendi; malzemeler düzenlenebilir.
-- PDF indirme artık tarayıcı yazdırma başlık/altbilgilerini kullanmaz.
+```bash
+npm install
