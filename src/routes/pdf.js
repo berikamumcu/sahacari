@@ -547,17 +547,17 @@ router.get(
          TABLO KOLONLARI
       ================================================== */
 
-      const widths = [
-        42,  // Tarih
-        42,  // Vade
-        55,  // Hareket
-        104, // Açıklama
-        76,  // Belge / Fatura No
-        52,  // Ödeme
-        52,  // Borç
-        52,  // Alacak
-        53   // Bakiye
-      ];
+    const widths = [
+      42, // Tarih
+      42, // Vade
+      52, // Hareket
+      98, // Açıklama
+      70, // Belge / Fatura No
+      50, // Ödeme
+      50, // Borç
+      50, // Alacak
+      68  // Bakiye
+    ];
 
 
       const cols = [left];
@@ -669,7 +669,7 @@ router.get(
 
         doc
           .font(boldFont)
-          .fontSize(6.4)
+          .fontSize(6.1)
           .fillColor('#fff');
 
 
@@ -888,7 +888,7 @@ router.get(
 
               doc
                 .font(regularFont)
-                .fontSize(6.35)
+                .fontSize(6)
                 .fillColor('#182334')
                 .text(
                   value,
